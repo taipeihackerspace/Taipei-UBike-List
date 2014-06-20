@@ -16,10 +16,19 @@
 		
 	</head>
 
-	
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+    <style>
+    div.olControlAttribution { bottom:3px; }
+    </style>
+
+</head>
+
 	<body style="overflow:hidden; margin:0px; padding:0px;">
-		<div id="ubikes" style="z-index:2; position:absolute; left:10px; top:10px; right:10px; bottom:10px; border:1px solid black; padding:5px; overflow:auto ">
+		<div id="ubikes" style="z-index:2; position:absolute; left:10px; top:10px; right:10px; bottom:330px; border:1px solid black; padding:5px; overflow:auto ">
 		</div> 
+		
+		<div id="mapdiv" style="z-index:2; position:absolute; left:10px; bottom:10px; right:10px; height:300px; border:1px solid black; padding:5px; overflow:auto "></div>
+
 	</body>
 </html>
 
@@ -46,24 +55,36 @@ function getDistance(lat1,lon1,lat2,lon2) {
 	return (d).toFixed(2);
 }
 
+function InitMap()
+{
+	map = new OpenLayers.Map("mapdiv");
+				
+	var mapnik = new OpenLayers.Layer.OSM();
+	map.addLayer(mapnik);
+
+	var lonlat = new OpenLayers.LonLat(MyLon, MyLat).transform('EPSG:4326', map.getProjectionObject());
+
+	var zoom = 13;
+
+	var markers = new OpenLayers.Layer.Markers( "Markers" );
+	map.addLayer(markers);
+	markers.addMarker(new OpenLayers.Marker(lonlat));
+
+	map.setCenter(lonlat, zoom);
+	
+	GetYouBikeStations();
+}
+
 function getLocation() {
 	if (navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(showPosition);
 	} else {
-		console.log( "Geolocation is not supported by this browser." );
+		InitMap();
 	}
 }
 
-function showPosition(position) {
-	MyLat = parseFloat(position.coords.latitude,10);
-	MyLon = parseFloat(position.coords.longitude,10);
-	
-//	console.log(  "Latitude: " + position.coords.latitude + " / Longitude: " + position.coords.longitude); 
-}
-	
-$(document).ready(function() {
-	getLocation();
-	
+function GetYouBikeStations()
+{
 	$.ajax({
 		type: 'GET',
 		url: "http://hackspace.tw/proxy/?url=http://its.taipei.gov.tw/atis_index/data/youbike/youbike.json",
@@ -75,23 +96,42 @@ $(document).ready(function() {
 			
 				ThisDistance = getDistance(MyLat,MyLon,parseFloat(v.lat,10),parseFloat(v.lng,10) );
 
-				$("#ubikes").append("<div class='row1'>\
-						<div class='box1'>"+ v.sna +"</div>\
-						<div class='box1'>"+ v.sarea +"</div>\
-						<div class='box1'>"+ v.ar +"</div>\
-						\
-						<div class='box1'>"+ v.sareaen +"</div>\
-						<div class='box1'>"+ v.snaen +"</div>\
-						<div class='box1'>"+ v.aren +"</div>\
-						\
-						<div class='box1'>"+ v.lat +"</div>\
-						<div class='box1'>"+ v.lng +"</div>\
-						<div class='box2'>"+ ThisDistance +"km</div>\
-					</div>");
+				var lonlat = new OpenLayers.LonLat(parseFloat(v.lng,10), parseFloat(v.lat,10)).transform('EPSG:4326', map.getProjectionObject());
+				
+				var markers = new OpenLayers.Layer.Markers( "Markers" );
+				map.addLayer(markers);
+				markers.addMarker(new OpenLayers.Marker(lonlat));
+				
+				
+				$("#ubikes").append("<div class='row1'>"+
+						"<div class='box1'>"+ v.sna +"</div>"+
+						"<div class='box1'>"+ v.sarea +"</div>"+
+						"<div class='box1'>"+ v.ar +"</div>"+
+						
+						"<div class='box1'>"+ v.sareaen +"</div>"+
+						"<div class='box1'>"+ v.snaen +"</div>"+
+						"<div class='box1'>"+ v.aren +"</div>"+
+						
+						"<div class='box1'>"+ v.lat +"</div>"+
+						"<div class='box1'>"+ v.lng +"</div>"+
+						"<div class='box2'>"+ ThisDistance +"km</div>"+
+					"</div>");
 			});	
 			// console.log( JSON.stringify(data) );
 		}
 	});
+}
 
+function showPosition(position) {
+	MyLat = parseFloat(position.coords.latitude,10);
+	MyLon = parseFloat(position.coords.longitude,10);
+	InitMap();
+//	console.log(  "Latitude: " + position.coords.latitude + " / Longitude: " + position.coords.longitude); 
+}
+
+
+	
+$(document).ready(function() {
+	getLocation();
 });
 </script>
