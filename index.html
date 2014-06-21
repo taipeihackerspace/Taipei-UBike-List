@@ -96,6 +96,8 @@ function GetYouBikeStations()
 			
 				ThisDistance = getDistance(MyLat,MyLon,parseFloat(v.lat,10),parseFloat(v.lng,10) );
 
+				
+				
 				var lonlat = new OpenLayers.LonLat(parseFloat(v.lng,10), parseFloat(v.lat,10)).transform('EPSG:4326', map.getProjectionObject());
 				
 				var markers = new OpenLayers.Layer.Markers( "Markers" );
